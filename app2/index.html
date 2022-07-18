@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,43 +9,140 @@
     <link rel="shortcut icon" href="#" type="image/x-icon">
     <link rel="stylesheet" href="style.css">
     <!---匯入要使用的函式庫--->
-
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 
 </head>
-<body>
-  <h1 class="header">學生資料管理系統</h1>
 
-  
+<body>
+    <h1 class="header">學生資料管理系統</h1>
+
+
+    <div id="addForm">
+
+        <form method="post">
+            <p>班級:<input type="number" name="classroom" id="classroom"></p>
+            <p>座號:<input type="number" name="seatnum" id="seatnum"></p>
+            <p>姓名:<input type="text" name="name" id="name"></p>
+            <p>生日:<input type="date" name="birthday" id="birthday"></p>
+            <p><input type="button" value="確認新增" onclick="create()"></p>
+        </form>
+    </div>
+    <div id="editForm"></div>
+
+
+    <a href="javascript:query(101)">101</a>
+    <a href="javascript:query(102)">102</a>
+    <a href="javascript:query(103)">103</a>
+    <a href="javascript:query(104)">104</a>
+    <a href="javascript:query(105)">105</a>
+    <a href="javascript:query(106)">106</a>
+    <a href="javascript:query(107)">107</a>
+    <a href="javascript:query(108)">108</a>
+    <a href="javascript:query(109)">109</a>
+    <a href="javascript:query(110)">110</a>
+    <h3 id="room"></h3>
+    <div id="result" style="display: none;"></div>
+    <table id="list"></table>
 </body>
+
 </html>
 <script>
-/************************************
-* 1.考慮觸發行為的事件
-* 2.建立監聽行為
-* 3.考慮是否需要代入參數
-* 4.是否會有回傳值？回傳值的功用及處理？
-* 5.是否需要更新畫面內容？更新畫面的方法？
-************************************/
+    // query()
+
+    /************************************
+     * 1.考慮觸發行為的事件
+     * 2.建立監聽行為
+     * 3.考慮是否需要代入參數
+     * 4.是否會有回傳值？回傳值的功用及處理？
+     * 5.是否需要更新畫面內容？更新畫面的方法？
+     ************************************/
 
 
-//新增資料的函式
-function create(){
+    //新增資料的函式
+    function create() {
+        let form = {
+            "classroom": $("#classroom").val(),
+            "seatnum": $("#seatnum").val(),
+            "name": $("#name").val(),
+            "birthday": $("#birthday").val(),
+        }
 
-}
+        console.log(form)
+        $.post("./api/insert.php", form, (res) => {
 
-//查詢資料的函式
-function query(){
+            //確保回傳回來的是數字
+            if (parseInt(res) === 1) {
+                alert("新增成功")
+                //新增完後直接顯示班級
+                query(form.classroom)
+            } else {
+                alert("新增失敗")
+            }
+        })
 
-}
+    }
 
-//編輯資料的函式
-function update(){
+    //查詢資料的函式
+    function query(classroom) {
+        console.log(classroom);
+        $("#room").html(`現在顯示的是${classroom}班的學生`);
+        //從api/query.php拿資料
+        $.get("api/query.php", {
+            classroom
+        }, (students) => {
 
-}
+            //未編譯的JSON字串
+            // console.log(students); 
 
-//刪除資料的函式
-function del(){
+            //把樓上的JSON字串改成陣列
+            students = JSON.parse(students);
+            // console.log(students);
+            let tr = '';
+            students.forEach((val, idx) => {
+                tr = tr + `<tr>
+                              <td>${val.name}</td>
+                              <td>${val.birthday}</td>
+                              <td><button onclick='del(${classroom},${val.id})'>刪除(${val.id})</button></td>
+                           </tr>`;
+            })
 
-}
+            $("#list").html(tr);
+
+        })
+    }
+
+    //編輯資料的函式
+    function update() {
+
+    }
+
+    //刪除資料的函式
+    function del(classroom,id){
+        $.post("./api/delete.php",{id},(res)=>{
+
+            //執行成功後 在上面顯示一個區塊通知刪除結果
+            if (parseInt(res) === 1) {
+                $("#result").css({background: 'lightblue', color: 'blue', display: 'block'}).text("刪除成功");
+            } else {
+                $("#result").css({background: 'pinky', color: 'red', display: 'block'}).text("刪除失敗");
+            }
+            console.log('res='+res);
+            query(classroom);
+
+            //三秒後結果區塊消失
+            setTimeout(()=>{
+            $("#result").hide();
+            },3000)
+        })
+    }
+
+
+
+
+
+
+
+
 
 </script>

@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,15 +10,12 @@
     <!---匯入要使用的函式庫--->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
-
 </head>
-
 <body>
     <h1 class="header">學生資料管理系統</h1>
 
-
     <div id="addForm">
-
+        <h3>新增學員</h3>
         <form method="post">
             <p>班級:<input type="number" name="classroom" id="classroom"></p>
             <p>座號:<input type="number" name="seatnum" id="seatnum"></p>
@@ -28,7 +24,21 @@
             <p><input type="button" value="確認新增" onclick="create()"></p>
         </form>
     </div>
-    <div id="editForm"></div>
+
+
+    <div id="editForm">
+        <h3>編輯學員</h3>
+        <form method="post">
+          <p>班級:<input type="number" name="classroom" id="eClassroom" value=""></p>
+          <p>座號:<input type="number" name="seatnum" id="eSeatnum" value=""></p>
+          <p>姓名:<input type="text" name="name" id="eName" value=""></p>
+          <p>生日:<input type="date" name="birthday" id="eBirthday" value=""></p>
+          <p>
+            <input type="hidden" name="id" id="stuId" value="">
+            <input type="button" value="確認編輯" onclick="update()">
+          </p>
+        </form>
+      </div>
 
 
     <a href="javascript:query(101)">101</a>
@@ -41,13 +51,17 @@
     <a href="javascript:query(108)">108</a>
     <a href="javascript:query(109)">109</a>
     <a href="javascript:query(110)">110</a>
-    <h3 id="room"></h3>
+
+    <!-- 一開啟頁面就載入101 -->
+    <h3 id="room" data-classroom="101"></h3>
+
     <div id="result" style="display: none;"></div>
     <table id="list"></table>
 </body>
 
 </html>
 <script>
+    query(101)
     // query()
 
     /************************************
@@ -87,6 +101,7 @@
     function query(classroom) {
         console.log(classroom);
         $("#room").html(`現在顯示的是${classroom}班的學生`);
+        $("#room").data('classroom',classroom);
         //從api/query.php拿資料
         $.get("api/query.php", {
             classroom
@@ -103,7 +118,8 @@
                 tr = tr + `<tr>
                               <td>${val.name}</td>
                               <td>${val.birthday}</td>
-                              <td><button onclick='del(${classroom},${val.id})'>刪除(${val.id})</button></td>
+                              <td><button onclick='edit(${val.id})'>編輯(${val.id})</button></td>
+                              <td><button onclick='del(${val.id})'>刪除(${val.id})</button></td>
                            </tr>`;
             })
 
@@ -112,13 +128,43 @@
         })
     }
 
+    //取得要被修改的學生的資料
+    function edit(id){
+        $.get("./api/show.php",{id},(student)=>{
+        student=JSON.parse(student)
+        $("#eClassroom").val(student.classroom)
+        $("#eSeatnum").val(student.seat_num)
+        $("#eName").val(student.name)
+        $("#eBirthday").val(student.birthday)
+        $("#stuId").val(student.id)
+        })
+    }
+
+
     //編輯資料的函式
     function update() {
+        let form = {
+            "classroom": $("#eclassroom").val(),
+            "seatnum": $("#eseatnum").val(),
+            "name": $("#eName").val(),
+            "birthday": $("#ebirthday").val(),
+            "id":$("#stuId").val()
+        }
 
+        //更新完後再把編輯欄清空  並query一次
+        $.post("./api/update.php",form,()=>{
+        $("#eClassroom").val(""),
+        $("#eSeatnum").val(""),
+        $("#eName").val(""),
+        $("#eBirthday").val(""),
+        $("#stuId").val("")
+        query(form.classroom)
+        })
     }
 
     //刪除資料的函式
-    function del(classroom,id){
+    function del(id){
+        let classroom=$("#room").data('classroom')
         $.post("./api/delete.php",{id},(res)=>{
 
             //執行成功後 在上面顯示一個區塊通知刪除結果

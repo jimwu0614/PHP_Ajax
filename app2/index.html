@@ -99,16 +99,14 @@
 
     //查詢資料的函式
     function query(classroom) {
-        console.log(classroom);
+        // console.log(classroom);
         $("#room").html(`現在顯示的是${classroom}班的學生`);
         $("#room").data('classroom',classroom);
         //從api/query.php拿資料
-        $.get("api/query.php", {
-            classroom
-        }, (students) => {
+        $.get("api/query.php", {classroom}, (students) => {
 
             //未編譯的JSON字串
-            // console.log(students); 
+            console.log(students); 
 
             //把樓上的JSON字串改成陣列
             students = JSON.parse(students);
